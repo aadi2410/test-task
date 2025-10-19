@@ -8,11 +8,19 @@ import {
 } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Company } from "./types";
+import LocationSelect from "./ui/custom-select";
+import SearchInput from "./ui/custom-serach";
+import { FiAlertCircle } from "react-icons/fi";
 
 const SkeletonRow: React.FC<{ columns: ColumnDef<Company, any>[] }> = ({ columns }) => (
   <tr className="animate-pulse">
     {columns.map((_, idx) => (
-      <td key={idx} className="p-3 border-b bg-gray-200 h-6">&nbsp;</td>
+      <td
+        key={idx}
+        className="p-3 border-b border-gray-200"
+      >
+        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      </td>
     ))}
   </tr>
 );
@@ -24,7 +32,6 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [globalFilter, setGlobalFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
@@ -138,138 +145,115 @@ const App: React.FC = () => {
   const companyNames = useMemo(() => [...new Set(allCompanies.map((c) => c.company))], [allCompanies]);
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      <h1 className="text-3xl font-bold text-center mb-6">Company Directory</h1>
-
-
-      <div className="flex flex-wrap gap-4 mb-4 justify-end items-center">
-        <div className="relative w-full sm:w-64">
-          <input
-            type="text"
-            placeholder="Search by Owner or Company..."
-            className="border p-2 rounded w-full pr-8"
+    <div>
+      <h1 className="text-3xl bg-blue-900 text-white py-2.5 font-semibold text-center mb-6 sticky top-0 z-50">Company Directory</h1>
+      <div className="max-w-7xl mx-auto w-full px-4 pb-4">
+        <div className="flex md:flex-row flex-col flex-wrap gap-4 mb-4 md:justify-between md:items-center">
+          <div className="flex gap-2 items-center w-full sm:w-[unset]">
+            <LocationSelect
+              locations={locations}
+              value={locationFilter}
+              onChange={setLocationFilter}
+              optionPlaceholder="All Location"
+            />
+            <LocationSelect
+              locations={companyNames}
+              value={companyFilter}
+              onChange={setCompanyFilter}
+              optionPlaceholder="All Companies"
+            />
+          </div>
+         <SearchInput
             value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            onChange={setGlobalFilter}
           />
-          {globalFilter && (
-            <button
-              onClick={() => setGlobalFilter("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-            >
-              ✕
-            </button>
-          )}
         </div>
 
-        <select
-          value={locationFilter}
-          onChange={(e) => setLocationFilter(e.target.value)}
-          className="border p-2 rounded w-full sm:w-auto"
-        >
-          <option value="">All Cities</option>
-          {locations.map((loc) => (
-            <option key={loc} value={loc}>
-              {loc}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={companyFilter}
-          onChange={(e) => setCompanyFilter(e.target.value)}
-          className="border p-2 rounded w-full sm:w-auto"
-        >
-          <option value="">All Companies</option>
-          {companyNames.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="overflow-x-auto border rounded shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const isSortable = header.column.getCanSort();
-                  const sortDirection = header.column.getIsSorted();
-                  return (
-                    <th
-                      key={header.id}
-                      className={`p-3 text-left cursor-pointer select-none ${
-                        isSortable ? "hover:bg-gray-200" : ""
-                      }`}
-                      onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
-                    >
-                      <div className="flex items-center justify-between">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {isSortable && (
-                          <span className="ml-2 flex flex-col items-center">
-                            <span
-                              className={`text-xs leading-none ${
-                                sortDirection === "asc" ? "text-gray-800" : "text-gray-300"
-                              }`}
-                            >
-                              ▲
+        <div className="overflow-x-auto border border-gray-200 rounded shadow-sm max-h-[calc(100vh-160px)] min-h-[125px] overflow-auto">
+          <table className="divide-y w-full divide-gray-200">
+            <thead className="bg-gray-100 sticky top-0">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    const isSortable = header.column.getCanSort();
+                    const sortDirection = header.column.getIsSorted();
+                    return (
+                      <th
+                        key={header.id}
+                        className={`p-3 text-left font-semibold cursor-pointer select-none ${
+                          isSortable ? "hover:bg-gray-200" : ""
+                        }`}
+                        onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
+                      >
+                        <div className="flex items-center justify-between">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {isSortable && (
+                            <span className="ml-2 flex flex-col items-center">
+                              <span
+                                className={`text-xs leading-none ${
+                                  sortDirection === "asc" ? "text-gray-800" : "text-gray-300"
+                                }`}
+                              >
+                                ▲
+                              </span>
+                              <span
+                                className={`text-xs leading-none ${
+                                  sortDirection === "desc" ? "text-gray-800" : "text-gray-300"
+                                }`}
+                              >
+                                ▼
+                              </span>
                             </span>
-                            <span
-                              className={`text-xs leading-none ${
-                                sortDirection === "desc" ? "text-gray-800" : "text-gray-300"
-                              }`}
-                            >
-                              ▼
-                            </span>
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
-
-          <tbody>
-            {filteredData.length === 0 && !loading && !error && (
-              <tr>
-                <td colSpan={columns.length} className="p-3 text-center">
-                  No companies found.
-                </td>
-              </tr>
-            )}
-
-            {table.getRowModel().rows.map((row, idx) => {
-              const ref = idx === table.getRowModel().rows.length - 1 ? lastRowRef : null;
-              return (
-                <tr
-                  key={row.id}
-                  ref={ref}
-                  className="even:bg-gray-50 hover:bg-gray-100 transition"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="p-3 border-b border-gray-200">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
-              );
-            })}
-
-            {loading &&
-              Array.from({ length: 5 }).map((_, i) => (
-                <SkeletonRow key={i} columns={columns} />
               ))}
-          </tbody>
-        </table>
-      </div>
-      {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-center">{error}</div>}
+            </thead>
 
-      {!loading && showEndMessage && !error && (
-        <p className="text-center mt-4 text-gray-500">No more companies to load.</p>
-      )}
+            <tbody>
+              {filteredData.length === 0 && !loading && !error && (
+                <tr>
+                  <td colSpan={columns.length} className="p-3 text-center">
+                    <p className="h-[250px] flex justify-center items-center gap-3 text-gray-400">
+                      <FiAlertCircle size={24} />
+                      No companies found</p>
+                  </td>
+                </tr>
+              )}
+
+              {table.getRowModel().rows.map((row, idx) => {
+                const ref = idx === table.getRowModel().rows.length - 1 ? lastRowRef : null;
+                return (
+                  <tr
+                    key={row.id}
+                    ref={ref}
+                    className="even:bg-gray-50 hover:bg-gray-100 transition"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="p-3 border-b border-gray-200 text-gray-600">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+
+              {loading &&
+                Array.from({ length: 10 }).map((_, i) => (
+                  <SkeletonRow key={i} columns={columns} />
+                ))}
+            </tbody>
+          </table>
+        </div>
+        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-center">{error}</div>}
+
+        {!loading && showEndMessage && !error && (
+          <p className="text-center mt-4 text-gray-500">No more companies to load.</p>
+        )}
+        </div>
     </div>
   );
 };
